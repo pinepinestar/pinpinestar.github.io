@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>随机数生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .input-section {
+            margin-bottom: 30px;
+            display: inline-block;
+            text-align: left;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        #start-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #start-button:hover {
+            background-color: #45a049;
+        }
+        .circles-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: lightblue;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        .circle.back {
+            background-color: lightcoral;
+        }
+        @media (max-width: 600px) {
+            .circle {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>随机数生成器</h1>
+
+    <div class="input-section">
+        <div class="input-group">
+            <label>前面数字范围：</label>
+            <input type="number" id="front-min" placeholder="最小值" min="1" value="1">
+            <input type="number" id="front-max" placeholder="最大值" min="1" value="49">
+        </div>
+        <div class="input-group">
+            <label>前面要生成的随机数个数：</label>
+            <input type="number" id="front-count" placeholder="数量" min="1" value="6">
+        </div>
+        <hr>
+        <div class="input-group">
+            <label>后面数字范围：</label>
+            <input type="number" id="back-min" placeholder="最小值" min="1" value="1">
+            <input type="number" id="back-max" placeholder="最大值" min="1" value="49">
+        </div>
+        <div class="input-group">
+            <label>后面要生成的随机数个数：</label>
+            <input type="number" id="back-count" placeholder="数量" min="0" value="0">
+        </div>
+        <button id="start-button">开始生成</button>
+    </div>
+
+    <div class="circles-container" id="circles-container">
+        <!-- 圆圈将动态生成 -->
+    </div>
+
+    <script>
+        // 获取元素
+        const startButton = document.getElementById('start-button');
+        const circlesContainer = document.getElementById('circles-container');
+
+        let intervalId;
+
+        // 生成不重复的随机数
+        function generateUniqueNumbers(min, max, count) {
+            const numbers = [];
+            const available = [];
+            for (let i = min; i <= max; i++) {
+                available.push(i);
+            }
+            for (let i = 0; i < count; i++) {
+                if (available.length === 0) break;
+                const index = Math.floor(Math.random() * available.length);
+                numbers.push(available[index]);
+                available.splice(index, 1);
+            }
+            return numbers;
+        }
+
+        // 创建圆圈元素
+        function createCircles(frontNumbers, backNumbers) {
+            circlesContainer.innerHTML = ''; // 清空之前的圆圈
+
+            frontNumbers.forEach(num => {
+                const circle = document.createElement('div');
+                circle.classList.add('circle', 'front');
+                circle.textContent = num;
+                circlesContainer.appendChild(circle);
+            });
+
+            backNumbers.forEach(num => {
+                const circle = document.createElement('div');
+                circle.classList.add('circle', 'back');
+                circle.textContent = num;
+                circlesContainer.appendChild(circle);
+            });
+        }
+
+        // 开始动画
+        function startAnimation(frontRange, frontCount, backRange, backCount) {
+            if (intervalId) clearInterval(intervalId); // 清除之前的定时器
+
+            intervalId = setInterval(() => {
+                // 生成前面的数字
+                const frontNumbers = generateUniqueNumbers(frontRange.min, frontRange.max, frontCount);
+
+                // 生成后面的数字
+                let backNumbers = [];
+                if (backCount > 0) {
+                    backNumbers = generateUniqueNumbers(backRange.min, backRange.max, backCount);
+                }
+
+                // 创建并显示圆圈
+                createCircles(frontNumbers, backNumbers);
+            }, 100); // 每100毫秒更新一次
+        }
+
+        // 处理开始按钮点击
+        startButton.addEventListener('click', () => {
+            // 获取用户输入
+            const frontMin = parseInt(document.getElementById('front-min').value);
+            const frontMax = parseInt(document.getElementById('front-max').value);
+            const frontCount = parseInt(document.getElementById('front-count').value);
+
+            const backMin = parseInt(document.getElementById('back-min').value);
+            const backMax = parseInt(document.getElementById('back-max').value);
+            const backCount = parseInt(document.getElementById('back-count').value);
+
+            // 验证输入
+            if (frontMin > frontMax) {
+                alert('前面数字的最小值不能大于最大值。');
+                return;
+            }
+            if (backMin > backMax) {
+                alert('后面数字的最小值不能大于最大值。');
+                return;
+            }
+            if (frontCount > (frontMax - frontMin + 1)) {
+                alert('前面生成的随机数个数超过范围内的可选数。');
+                return;
+            }
+            if (backCount > (backMax - backMin + 1)) {
+                alert('后面生成的随机数个数超过范围内的可选数。');
+                return;
+            }
+
+            // 设置范围和数量
+            const frontRange = { min: frontMin, max: frontMax };
+            const backRange = { min: backMin, max: backMax };
+
+            // 开始动画
+            startAnimation(frontRange, frontCount, backRange, backCount);
+        });
+
+        // 初始启动
+        window.onload = () => {
+            // 获取默认值
+            const frontMin = parseInt(document.getElementById('front-min').value);
+            const frontMax = parseInt(document.getElementById('front-max').value);
+            const frontCount = parseInt(document.getElementById('front-count').value);
+
+            const backMin = parseInt(document.getElementById('back-min').value);
+            const backMax = parseInt(document.getElementById('back-max').value);
+            const backCount = parseInt(document.getElementById('back-count').value);
+
+            const frontRange = { min: frontMin, max: frontMax };
+            const backRange = { min: backMin, max: backMax };
+
+            startAnimation(frontRange, frontCount, backRange, backCount);
+        };
+    </script>
+
+</body>
+</html>
